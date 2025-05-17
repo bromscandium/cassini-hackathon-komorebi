@@ -12,15 +12,14 @@
         font-family: 'Exo 2', sans-serif;
 
         h2 {
-            margin-bottom: 0.5rem;
-            font-size: 1.5rem;
-            background: none;
+            border-bottom: 1px solid #000;
+            padding-bottom: 0.5rem;
+            font-size: 1.75rem;
         }
 
         p {
+            font-size: 1rem;
             margin-bottom: 1rem;
-            color: #555;
-            background: none;
         }
 
         label {
@@ -28,17 +27,91 @@
             background: none;
         }
 
+        input[type="text"],
         select,
         input[type="date"] {
             padding: 0.5rem;
             font-size: 1rem;
             border-radius: 6px;
-            border: none;
+            border: 1px solid #5d5d5d;
             background: none;
+            text-align: center;
+
+            &:focus {
+                border: 2px solid #444;
+                outline: none;
+            }
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        }
+
+        input[type="file"] {
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #5d5d5d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+
+            &:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
         }
 
         option {
-            border: none;
+            padding: 0.5rem;
+            border: 1px solid #5d5d5d;
+
+            &:disabled {
+                color: #999;
+            }
+        }
+
+        .role-options {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .role-options label {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e3e3e3;
+            border-radius: 6px;
+            padding: 0.75rem;
+            cursor: pointer;
+        }
+
+        .role-options input {
+            display: none;
+        }
+
+        .role-options label.selected {
+            border: 1px solid #000000;
+        }
+
+        .role-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .role-label {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            text-align: center;
+        }
+
+        .role-desc {
+            font-size: 0.875rem;
+            color: #666;
+            text-align: center;
         }
 
         .duration {
@@ -49,28 +122,28 @@
         }
 
         .start-button {
-            padding: 0.75rem;
-            background-color: #2196f3;
-            color: white;
-            font-size: 1rem;
-            border: none;
+            background-color: #fff;
+            color: #444;
+            border: 1px solid #5d5d5d;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
             border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            font-size: 1rem;
 
             &:hover:enabled {
-                background-color: #1976d2;
+                background-color: #e8e8e8;
             }
 
             &:disabled {
-                background-color: #b0bec5;
+                opacity: 0.6;
                 cursor: not-allowed;
             }
         }
     }
 
     .map-container {
-        flex-grow: 1;
-        height: 100%;
+        flex: 1;         /* розтягується на весь вільний простір */
+        min-height: 0;   /* дозволяє дитині flex-елемента займати висоту */
+        position: relative;  /* щоб внутрішній canvas точно лягав по розмірам */
     }
 }
