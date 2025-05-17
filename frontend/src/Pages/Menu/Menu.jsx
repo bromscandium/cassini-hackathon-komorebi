@@ -155,7 +155,7 @@ export default function Menu() {
         };
 
         try {
-            await sendGameSetup(gameData, file);
+            //await sendGameSetup(gameData, file);
             localStorage.setItem('disaster_game_setup', JSON.stringify(gameData));
             window.location.href = '/game';
         } catch (err) {
