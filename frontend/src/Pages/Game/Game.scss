@@ -1,0 +1,206 @@
+/* Game.scss */
+
+.game-layout {
+    display: flex;
+    height: 100vh;
+    font-family: sans-serif;
+}
+
+/* Left: Chat panel */
+.chat-panel {
+    width: 25%;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ddd;
+}
+
+.status-bar {
+    padding: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.stability-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.stability-bar {
+    background: #eee;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: #4caf50;
+}
+
+.chat-history {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.message {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.message.user {
+    text-align: right;
+}
+
+.message.system {
+    text-align: left;
+}
+
+.message .time {
+    display: block;
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 0.25rem;
+}
+
+.chat-input-area {
+    padding: 1rem;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: flex-start;
+}
+
+.chat-input-area textarea {
+    flex: 1;
+    height: 60px;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+}
+
+.chat-input-area button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: #007bff;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.chat-input-area button:hover {
+    background: #0056b3;
+}
+
+.chat-input-area .guideline {
+    width: 100%;
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+/* Center: Map section */
+.map-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+.map-controls button {
+    padding: 0.3rem 0.6rem;
+    border: none;
+    background: #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.map-controls button:hover {
+    background: #ccc;
+}
+
+.current-time {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.map-container {
+    flex: 1;
+    position: relative;
+}
+
+.map-container > .maplibregl-map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 90%;
+}
+
+/* Right: Dashboard panel */
+.dashboard-panel {
+    width: 20%; /* reduced by 10% */
+    background: #f8f9fa;
+    padding: 1rem;
+    border-left: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+.dashboard-panel h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.resources-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.resource-header {
+    font-weight: bold;
+    font-size: 1rem;
+    margin: 1rem 0 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.resource-header .icon {
+    margin-right: 0.5rem;
+}
+
+.resource-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.resource-item .icon {
+    margin-right: 0.5rem;
+}
+
+.resource-item .name {
+    flex: 1;
+}
+
+.resource-item .count {
+    font-size: 0.85rem;
+    color: #666;
+}
