@@ -1,4 +1,4 @@
-const MockData = [
+const ResourceData = [
     {
         category: 'Medical Resources',
         items: [
@@ -21,4 +21,4 @@ const MockData = [
     }
 ];
 
-export default MockData;
+export default ResourceData;
