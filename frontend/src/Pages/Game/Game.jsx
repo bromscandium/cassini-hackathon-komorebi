@@ -446,38 +446,44 @@ export default function Game() {
                             <h2>Human vs. AI Response Comparison</h2>
                             <button className="cmp-close" onClick={() => setShowComparison(false)}>×</button>
                         </header>
-
-                        <div className="cmp-section">
-                            <div className="cmp-title">Event: {userLastResult.title}</div>
+                        <div className="cmp-event-row">
+                            Event: {userLastResult.title}
+                        </div>
+                        <div className="cmp-summary">
+                            <div className="cmp-subtitle">Effectiveness Comparison</div>
                             <div className="cmp-scores">
-                                <div>
-                                    <strong>Your Response</strong><br/>
-                                    <span className="score">{userLastResult.score}/10</span>
+                                <div className="score-block">
+                                    <strong>Your Response</strong>
+                                    <span className="score" style={{color: groupBg}}>
+                                        {userLastResult.score} / 10
+                                    </span>
                                 </div>
-                                <div>
-                                    <strong>AI Response</strong><br/>
-                                    <span className="score">{aiLastResult.score}/10</span>
+                                <div className="score-block">
+                                    <strong>AI Response</strong>
+                                    <span className="score" style={{color: groupBg}}>
+                                        {aiLastResult.score} / 10
+                                    </span>
                                 </div>
                             </div>
                         </div>
-
                         <div className="cmp-body">
                             <div className="cmp-col">
                                 <h4>Your Response</h4>
                                 <p className="cmp-text">{userLastResult.text}</p>
                                 <p className="cmp-result">Result: {userLastResult.resultText}</p>
-                                <p className="cmp-feedback">Feedback: {userLastResult.feedback}</p>
+                                <p className="cmp-feedback">{userLastResult.feedback}</p>
                             </div>
                             <div className="cmp-col">
                                 <h4>AI Response</h4>
                                 <p className="cmp-text">{aiLastResult.text}</p>
                                 <p className="cmp-result">Result: {aiLastResult.resultText}</p>
-                                <p className="cmp-feedback">Feedback: {aiLastResult.feedback}</p>
+                                <p className="cmp-feedback">{aiLastResult.feedback}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
         </div>
     );
 }
