@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Tuple
 import click
 import openeo
 import xarray as xr
-from ruamel.yaml import YAML
 
 # Optional plotting libs – guarded import
 try:
@@ -30,7 +29,6 @@ _LOG = logging.getLogger("copernicus_precip")
 # CONFIGURATION OBJECTS
 ###############################################################################
 
-yaml = YAML(typ="safe")
 
 
 def _read_yaml(path: Path) -> Dict[str, Any]:

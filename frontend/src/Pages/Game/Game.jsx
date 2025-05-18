@@ -213,23 +213,36 @@ export default function Game() {
         return () => markers.forEach(m => m.remove());
     }, [map, bubbles, setup?.coords]);
 
-    useEffect(() => {
-    fetchInitialBubbles(localStorage.getItem('location'))
+
+useEffect(() => {
+fetchInitialBubbles(localStorage.getItem('location')
+)
     .then(data => {
-        const mpt = data.threats.most_potential_threat;
-
-        setBubbles([{
-        index: 1,
-        title: mpt.name,
+      // 1️⃣ grab the “most potential threat” if you want it as bubble #0
+      const mpt = data.threats.most_potential_threat;
+      const initialBubble = {
+        index:       0,
+        title:       mpt.name,
         description: mpt.threat_description,
-        visible: false,
-        }]);
+        visible:     true
+      };
 
-        localStorage.setItem('session_id', data.session_id);
+      // 2️⃣ now map each day → one bubble
+      const dailyBubbles = data.threats.daily_threats.map(day => ({
+        index:       day.day,                                           // 1 through 7
+        title:       `Infrastructure issues`,
+        description: day.critical_infrastructure_problems.join('  '),   // join the strings
+        visible:     false
+      }));
+
+      // 3️⃣ combine and set
+      setBubbles([ initialBubble, ...dailyBubbles ]);
+
+      // 4️⃣ stash your session_id
+      localStorage.setItem('session_id', data.session_id);
     })
     .catch(console.error);
-
-    }, []);
+}, []);
 
 const handleSubmit = async () => {
   if (!inputValue.trim()) return;
