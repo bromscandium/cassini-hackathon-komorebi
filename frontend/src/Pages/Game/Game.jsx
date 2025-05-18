@@ -22,7 +22,6 @@ const disasterColors = {
 export default function Game() {
     const navigate = useNavigate();
     const {setGameCondition} = useDisaster();
-
     const [showComparison, setShowComparison] = useState(false);
     const [showLeft, setShowLeft] = useState(true);
     const [showRight, setShowRight] = useState(true);
@@ -46,6 +45,7 @@ export default function Game() {
     const [aiLastResult, setAiLastResult] = useState(null);
     const [bubbles, setBubbles] = useState([]);
     const [selectedBubble, setSelectedBubble] = useState(null);
+    const [showResult, setShowResult] = useState(false);
 
     const handleShowComparison = () => {
         if (!userLastResult || !aiLastResult) return;
@@ -212,6 +212,7 @@ export default function Game() {
             setResources(result.resources);
             setUserLastResult(result.userResult);
             setAiLastResult(result.aiResult);
+            setShowResult(true);
 
             setMessages(prev => [
                 ...prev,
@@ -436,6 +437,50 @@ export default function Game() {
                     >
                         Run AI Simulation
                     </button>
+                </div>
+            )}
+
+            {showResult && userLastResult && (
+                <div className="result-modal-backdrop">
+                    <div className="result-modal">
+                        <header className="res-header" style={{background: groupBg}}>
+                            <h2>Response Summary</h2>
+                            <button className="res-close" onClick={() => setShowResult(false)}>×</button>
+                        </header>
+                        <div className="res-body">
+                            <h3>{userLastResult.resultText}</h3>
+
+                            <div className="res-feedback">
+                                <strong>Feedback:</strong>
+                                <p>{userLastResult.feedback}</p>
+                            </div>
+
+                            {userLastResult.resourcesUsed?.length > 0 && (
+                                <div className="res-usage">
+                                    <h4>Resources Used</h4>
+                                    {userLastResult.resourcesUsed.map((r, i) => (
+                                        <div key={i}>{r.name}: {r.amount}</div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {userLastResult.analysis?.length > 0 && (
+                                <div className="res-analysis">
+                                    <h4>Response Analysis</h4>
+                                    {userLastResult.analysis.map((a, i) => (
+                                        <div key={i} className="analysis-item">
+                                            <span className="label">{a.category}</span>
+                                            <span className="score">{a.score}/10</span>
+                                            <div className="bar">
+                                                <div className="fill"
+                                                     style={{width: `${a.score * 10}%`, background: groupBg}}/>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
 
