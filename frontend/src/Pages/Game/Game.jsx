@@ -46,6 +46,8 @@ export default function Game() {
     const [selectedBubble, setSelectedBubble] = useState(null);
     const [showResult, setShowResult] = useState(false);
 
+    
+
     const handleShowComparison = () => {
         if (!userLastResult || !aiLastResult) return;
         setShowComparison(true);
@@ -259,17 +261,17 @@ const handleSubmit = async () => {
     );
 
     setResources(formatted);
-    // after you get `result` back:
     setUserLastResult({
-    shortResponse:    result.analysis.short_response,
-    feedback:         result.analysis.feedback,
-    responseAnalysis: result.analysis.response_analysis,
-    // …pick whatever else you need…
+    userInput: inputValue,
+          updated_resources: result.updated_resources,
+    ...result.analysis
     });
 
     setAiLastResult(result.analysis.alternative_solutions);
-    setAiLastResult(result.analysis.alternative_solutions);
     setShowResult(true);
+
+
+    setCrisisStability(result.severity_score * 10);
 
     console.log("User action submitted:", result.analysis.alternative_solutions);
     console.log("AI action submitted:", result.analysis.alternative_solutions);
@@ -287,14 +289,28 @@ const handleSubmit = async () => {
       },
     ]);
     console.log("User action submitted:", result);
+    console.log("AI action submitted:", result.analysis.short_response);
+    console.log("AI action submitted:", result.analysis.feedback);
+    console.log("AI action submitted:", result.analysis.response_analysis.overall_effectiveness);
+    console.log("AI action submitted:", result.analysis.alternative_solutions);
 
     setTurnsLeft(prev => Math.max(prev - 1, 0));
   } catch (err) {
     console.error("submitGameAction failed:", err);
   }
 
+
   setInputValue('');
 };
+
+    useEffect(() => {
+  if (!userLastResult) return;
+  // e.g. if you wanted to push userLastResult.updated_resources back into localStorage:
+  localStorage.setItem(
+    "resources",
+    JSON.stringify([ userLastResult.updated_resources ])
+  );
+}, [userLastResult]);
 
     const togglePlay = () => setIsPlaying(prev => !prev);
 
@@ -322,22 +338,31 @@ const handleSubmit = async () => {
 
                     <h3>Resource Panel</h3>
                     <ul className="resources-list">
-                        {resources.map((group, gIdx) => (
-                            <React.Fragment key={gIdx}>
-                                <li className="resource-header"
-                                    style={{background: groupBg}}
-                                >
-                                    <span className="icon">📦</span> {group.category}
-                                </li>
-                                {group.items.map((item, iIdx) => (
-                                    <li key={iIdx} className="resource-item">
-                                        <span className="icon">{item.icon}</span>
-                                        <span className="name">{item.name}</span>
-                                        <span className="count">{item.available} / {item.total} available</span>
-                                    </li>
-                                ))}
-                            </React.Fragment>
+                    {resources.map((group) => (
+                        <React.Fragment key={group.category}>
+                        <li
+                            className="resource-header"
+                            style={{ background: groupBg }}
+                        >
+                            📦 {group.category}
+                        </li>
+                        {/*
+                            Each `group.items` now comes from your latest
+                            `userLastResult.updated_resources` via localStorage
+                        */}
+                        {group.items.map((item) => (
+                            <li
+                            key={`${group.category}-${item.name}`}
+                            className="resource-item"
+                            >
+                            <span className="name">{item.name}</span>
+                            <span className="count">
+                                {item.available} / {item.total} available
+                            </span>
+                            </li>
                         ))}
+                        </React.Fragment>
+                    ))}
                     </ul>
                 </div>
             )}
@@ -408,8 +433,6 @@ const handleSubmit = async () => {
                                         </p>
                                         <div className="feedback">Feedback: {m.feedback}</div>
                                         <div className="effectiveness-container">
-                                              <span className="score-label">{m.effectiveness} / 10</span>
-
                                             <span className="label">Effectiveness:</span>
                                             <div className="effectiveness-bar">
                                                 <div
@@ -484,37 +507,43 @@ const handleSubmit = async () => {
                             <button className="res-close" onClick={() => setShowResult(false)}>×</button>
                         </header>
                         <div className="res-body">
-                            <h3>{userLastResult.resultText}</h3>
+                            <h3>{userLastResult.short_response}</h3>
 
                             <div className="res-feedback">
                                 <strong>Feedback:</strong>
                                 <p>{userLastResult.feedback}</p>
                             </div>
 
-                            {userLastResult.resourcesUsed?.length > 0 && (
-                                <div className="res-usage">
-                                    <h4>Resources Used</h4>
-                                    {userLastResult.resourcesUsed.map((r, i) => (
-                                        <div key={i}>{r.name}: {r.amount}</div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {userLastResult.analysis?.length > 0 && (
+                            {
+                            userLastResult.response_analysis &&
+                            Object.keys(userLastResult.response_analysis).length > 0 && (
                                 <div className="res-analysis">
-                                    <h4>Response Analysis</h4>
-                                    {userLastResult.analysis.map((a, i) => (
-                                        <div key={i} className="analysis-item">
-                                            <span className="label">{a.category}</span>
-                                            <span className="score">{a.score}/10</span>
-                                            <div className="bar">
-                                                <div className="fill"
-                                                     style={{width: `${a.score * 10}%`, background: groupBg}}/>
-                                            </div>
+                                <h4>Response Analysis</h4>
+                                {Object.entries(userLastResult.response_analysis).map(
+                                    ([category, score], i) => (
+                                    <div key={i} className="analysis-item">
+                                        <span className="label">
+                                        {category
+                                            .split('_')
+                                            .map(w => w[0].toUpperCase() + w.slice(1))
+                                            .join(' ')}
+                                        </span>
+                                        <span className="score">{score} / 10</span>
+                                        <div className="bar">
+                                        <div
+                                            className="fill"
+                                            style={{
+                                            width: `${score * 10}%`,
+                                            background: groupBg
+                                            }}
+                                        />
                                         </div>
-                                    ))}
+                                    </div>
+                                    )
+                                )}
                                 </div>
-                            )}
+                            )
+                            }
                         </div>
                     </div>
                 </div>
@@ -528,7 +557,7 @@ const handleSubmit = async () => {
                             <button className="cmp-close" onClick={() => setShowComparison(false)}>×</button>
                         </header>
                         <div className="cmp-event-row">
-                            Event: {userLastResult.title}
+                            Event: {setup.description}
                         </div>
                         <div className="cmp-summary">
                             <div className="cmp-subtitle">Effectiveness Comparison</div>
@@ -536,13 +565,13 @@ const handleSubmit = async () => {
                                 <div className="score-block">
                                     <strong>Your Response</strong>
                                     <span className="score" style={{color: groupBg}}>
-                                        {userLastResult.score} / 10
+                                        {userLastResult.response_analysis.overall_effectiveness} / 10
                                     </span>
                                 </div>
                                 <div className="score-block">
                                     <strong>AI Response</strong>
                                     <span className="score" style={{color: groupBg}}>
-                                        {aiLastResult.score} / 10
+                                        {aiLastResult.response_analysis.overall_effectiveness} / 10
                                     </span>
                                 </div>
                             </div>
@@ -550,14 +579,14 @@ const handleSubmit = async () => {
                         <div className="cmp-body">
                             <div className="cmp-col">
                                 <h4>Your Response</h4>
-                                <p className="cmp-text">{userLastResult.text}</p>
-                                <p className="cmp-result">Result: {userLastResult.resultText}</p>
+                                <p className="cmp-text">{userLastResult.userInput}</p>
+                                <p className="cmp-result">Result: {userLastResult.short_response}</p>
                                 <p className="cmp-feedback">{userLastResult.feedback}</p>
                             </div>
                             <div className="cmp-col">
                                 <h4>AI Response</h4>
-                                <p className="cmp-text">{aiLastResult.text}</p>
-                                <p className="cmp-result">Result: {aiLastResult.resultText}</p>
+                                <p className="cmp-text">{aiLastResult.solution}</p>
+                                <p className="cmp-result">Result: {aiLastResult.alternative_result}</p>
                                 <p className="cmp-feedback">{aiLastResult.feedback}</p>
                             </div>
                         </div>

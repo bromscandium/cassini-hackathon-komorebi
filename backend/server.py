@@ -118,11 +118,11 @@ def df_to_tsv(df: pd.DataFrame) -> str:
     response_model=ResourcesResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def extract_excel(files: List[UploadFile] = File(...)):
+async def extract_excel(file: List[UploadFile] = File(...)):
     """Turn one or more Excel files into a list of resource dicts."""
     resources_out: List[Dict[str, Any]] = []
 
-    for up in files:
+    for up in file:
         if not up.filename.endswith((".xlsx", ".xls")):
             raise HTTPException(415, f"{up.filename} is not an Excel file")
 

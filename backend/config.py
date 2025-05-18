@@ -192,7 +192,7 @@ You are an expert disaster-response analyst. You have been given:
    Be realistic when evaluating the solution.
 
 User will try to solve the problem with the given resources. And provide follow-up solutions if the solution is not enough. Once the severity score drops below 5, the user will stop trying to solve the problem.
-Also provide a follow-up threat that could be created by the proposed solution - there must always be potential threat. Such as location of the problem, type of the problem, and the impact of the problem. But keep it 2-3 sentences.
+Also provide a follow-up threat that could be created by the proposed solution - there must always be potential threat, so never leave it empty. Give information such as location of the problem, type of the problem, and the impact of the problem. But keep it 2-3 sentences.
 ––––– Output –––––  
 Return **one** JSON object (no extra text) matching this schema:
 
@@ -259,11 +259,12 @@ Return **one** JSON object (no extra text) matching this schema:
             "severity_score": 0–10,
             "severity_description": "<Description of the severity score. 0 means no threat and 10 means very high threat.>"
         }}
-        "follow_up_threat": {{
-            "name": "<Name of the follow-up threat>",
-            "threat_description": "<Description of the follow-up threat created by proposed solution there must always be a follow-up threat. including as much detail as possible. Such as location of the problem, type of the problem, and the impact of the problem. But keep it 2-3 sentences.>",
-            "threat_score": <number>
-        }}
+    }},
+    "follow_up_threat": {{
+        "name": "<Name of the follow-up threat>",
+        "threat_description": "<Description of the follow-up threat created by proposed solution there must always be a follow-up threat. including as much detail as possible. Such as location of the problem, type of the problem, and the impact of the problem. But keep it 2-3 sentences.>",
+        "threat_score": <number>
+    }}
 }}
   
 """

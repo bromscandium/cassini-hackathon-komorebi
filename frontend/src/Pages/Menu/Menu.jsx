@@ -160,6 +160,7 @@ export default function Menu({ onResources }) {
     onResources && onResources(resources);
     localStorage.setItem("resources", JSON.stringify(resources));
     localStorage.setItem("location", formData.country + ", " + formData.region);
+    localStorage.setItem('disaster_game_setup', JSON.stringify(gameData));
 
       window.location.href = "/game";
     } catch (err) {
