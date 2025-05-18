@@ -16,17 +16,19 @@ export async function submitGameAction(payload) {
     return await response.json();
 }
 
-export async function runSimulation(payload) {
-    const response = await fetch(`${API_BASE}/api/run-simulation`, {
+export async function fetchInitialBubbles() {
+    const res = await fetch(`${API_BASE}/api/bubbles`);
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+}
+
+export async function fetchUpdatedBubbles(payload) {
+    const res = await fetch(`${API_BASE}/api/bubbles/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            location:        payload.location,
-            initialStability: payload.initialStability,
-            resources:       payload.resources,
-            messages:        payload.messages
-        }),
+        body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error(await response.text() || response.status);
-    return await response.json();
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
 }
+

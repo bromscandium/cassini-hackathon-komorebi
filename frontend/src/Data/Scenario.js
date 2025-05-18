@@ -2,7 +2,7 @@ const scenarios = [
     {
         id: "es_valencia_flood",
         disasterType: "River Flood",
-        icon: "../../icons/flood.png",
+        icon: "../../icons/disasters/flood.png",
         country: "Spain",
         region: "Valencian Community",
         city: "Valencia",
@@ -13,7 +13,7 @@ const scenarios = [
     {
         id: "sk_bratislava_flood",
         disasterType: "River Flood",
-        icon: "../../icons/flood.png",
+        icon: "../../icons/disasters/flood.png",
         country: "Slovakia",
         region: "Western Slovakia",
         city: "Bratislava",
@@ -24,7 +24,7 @@ const scenarios = [
     {
         id: "it_naples_eruption",
         disasterType: "Volcanic Eruption",
-        icon: "../../icons/volcano.png",
+        icon: "../../icons/disasters/volcano.png",
         country: "Italy",
         region: "Campania",
         city: "Naples",
@@ -35,7 +35,7 @@ const scenarios = [
     {
         id: "fr_paris_heatwave",
         disasterType: "Heatwave",
-        icon: "../../icons/heatwave.png",
+        icon: "../../icons/disasters/heatwave.png",
         country: "France",
         region: "Île-de-France",
         city: "Paris",
@@ -46,7 +46,7 @@ const scenarios = [
     {
         id: "de_hamburg_flood",
         disasterType: "River Flood",
-        icon: "../../icons/flood.png",
+        icon: "../../icons/disasters/flood.png",
         country: "Germany",
         region: "Northern Germany",
         city: "Hamburg",
@@ -57,7 +57,7 @@ const scenarios = [
     {
         id: "gr_athens_fire",
         disasterType: "Wildfire",
-        icon: "../../icons/wildfire.png",
+        icon: "../../icons/disasters/wildfire.png",
         country: "Greece",
         region: "Attica",
         city: "Athens",
@@ -68,7 +68,7 @@ const scenarios = [
     {
         id: "nl_rotterdam_storm",
         disasterType: "Severe Storm",
-        icon: "../../icons/storm.png",
+        icon: "../../icons/disasters/storm.png",
         country: "Netherlands",
         region: "South Holland",
         city: "Rotterdam",
@@ -79,7 +79,7 @@ const scenarios = [
     {
         id: "no_oslo_avalanche",
         disasterType: "Avalanche",
-        icon: "../../icons/avalanche.png",
+        icon: "../../icons/disasters/avalanche.png",
         country: "Norway",
         region: "Oslo",
         city: "Oslo",
@@ -90,7 +90,7 @@ const scenarios = [
     {
         id: "cz_prague_flood",
         disasterType: "River Flood",
-        icon: "../../icons/flood.png",
+        icon: "../../icons/disasters/flood.png",
         country: "Czech Republic",
         region: "Bohemia",
         city: "Prague",

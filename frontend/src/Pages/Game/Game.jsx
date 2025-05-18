@@ -3,7 +3,10 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './Game.scss';
 import ResourceData from '../../Data/ResourceData';
-import {submitGameAction, runSimulation} from './GameAPI';
+import {fetchInitialBubbles, fetchUpdatedBubbles, submitGameAction} from './GameAPI';
+import alertIcon from '../../ui/alert.png';
+import {useNavigate} from "react-router-dom";
+import {useDisaster} from "../../Functions/DisasterContext";
 
 const MAP_TILE_STYLE = 'https://api.maptiler.com/maps/topo-v2/style.json?key=leLKcJqFrGkjyFiGlG7L';
 
@@ -17,6 +20,10 @@ const disasterColors = {
 };
 
 export default function Game() {
+    const navigate = useNavigate();
+    const {setGameCondition} = useDisaster();
+
+    const [showComparison, setShowComparison] = useState(false);
     const [showLeft, setShowLeft] = useState(true);
     const [showRight, setShowRight] = useState(true);
     const mapContainerRef = useRef(null);
@@ -37,7 +44,13 @@ export default function Game() {
     const hasUserAction = messages.some(m => m.type === 'action');
     const [userLastResult, setUserLastResult] = useState(null);
     const [aiLastResult, setAiLastResult] = useState(null);
-    const [prevResources, setPrevResources] = useState(null);
+    const [bubbles, setBubbles] = useState([]);
+    const [selectedBubble, setSelectedBubble] = useState(null);
+
+    const handleShowComparison = () => {
+        if (!userLastResult || !aiLastResult) return;
+        setShowComparison(true);
+    };
 
     const suggestionsMap = {
         'Medical Director': [
@@ -88,6 +101,13 @@ export default function Game() {
     }, []);
 
     useEffect(() => {
+        if (turnsLeft === 0) {
+            setGameCondition('lost');
+            navigate('/results', {replace: true});
+        }
+    }, [turnsLeft, setGameCondition, navigate]);
+
+    useEffect(() => {
         if (map || !setup || !setup.coords) return;
         const instance = new maplibregl.Map({
             container: mapContainerRef.current,
@@ -95,6 +115,7 @@ export default function Game() {
             center: setup.coords,
             zoom: setup.zoom,
         });
+
         instance.dragRotate.disable();
         instance.touchZoomRotate.disableRotation();
         setMap(instance);
@@ -110,8 +131,75 @@ export default function Game() {
         return () => clearInterval(interval);
     }, [currentTime, isPlaying, isTyping]);
 
+    function generateRandomCoordinates(center, radiusKm) {
+        const [centerLng, centerLat] = center;
+        const radiusInMeters = radiusKm * 1000;
+        const y0 = centerLat * Math.PI / 180;
+        const x0 = centerLng * Math.PI / 180;
+
+        const rand = Math.random();
+        const rand2 = Math.random();
+        const w = radiusInMeters * Math.sqrt(rand);
+        const t = 2 * Math.PI * rand2;
+
+        const dx = w * Math.cos(t);
+        const dy = w * Math.sin(t);
+
+        const newLat = (y0 + dy / 6378137) * 180 / Math.PI;
+        const newLng = (x0 + dx / (6378137 * Math.cos(y0))) * 180 / Math.PI;
+        return [newLng, newLat];
+    }
+
+    useEffect(() => {
+        if (!map || !bubbles.length || !setup?.coords) return;
+
+        const markers = [];
+
+        bubbles.forEach(b => {
+            const coords = b.coordinates || generateRandomCoordinates(setup.coords, 10);
+
+            const el = document.createElement('div');
+            el.className = 'custom-marker';
+
+            el.style.width = '60px';
+            el.style.height = '60px';
+            el.style.backgroundImage = `url(${alertIcon})`;
+            el.style.backgroundSize = 'contain';
+            el.style.backgroundRepeat = 'no-repeat';
+            el.style.backgroundPosition = 'center';
+            el.style.cursor = 'pointer';
+
+            el.addEventListener('click', () => {
+                setSelectedBubble(b);
+            });
+
+            const marker = new maplibregl.Marker({
+                element: el,
+                anchor: 'center'
+            })
+                .setLngLat(coords)
+                .addTo(map);
+
+            markers.push(marker);
+        });
+
+        return () => markers.forEach(m => m.remove());
+    }, [map, bubbles, setup?.coords]);
+
+    useEffect(() => {
+        fetchInitialBubbles().then(data => {
+            setBubbles(data.map((b, i) => ({
+                index: i + 1,
+                title: b.title,
+                description: b.description,
+                visible: b.visible ?? false
+            })));
+        });
+    }, []);
+
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;
+
         try {
             const result = await submitGameAction({
                 location: setup.coords,
@@ -120,46 +208,57 @@ export default function Game() {
                 resources,
                 messages
             });
-            setPrevResources(resources);
             setCrisisStability(result.initialStability);
             setResources(result.resources);
-            setUserLastResult(result);
+            setUserLastResult(result.userResult);
+            setAiLastResult(result.aiResult);
+
             setMessages(prev => [
                 ...prev,
                 {
                     type: 'action',
                     title: setup.description,
                     action: inputValue,
-                    resultText: result.resultText,
-                    feedback: result.feedback,
-                    effectiveness: result.effectiveness,
+                    resultText: result.userResult.resultText,
+                    feedback: result.userResult.feedback,
+                    effectiveness: result.userResult.effectiveness,
                     time: new Date()
-                }
+                },
             ]);
+
+            const prevCount = bubbles.length;
+
+            const updatedData = await fetchUpdatedBubbles({
+                location: setup.coords,
+                prompt: inputValue,
+                resources: result.resources,
+                messages: [...messages, {type: 'action', action: inputValue}]
+            });
+
+
+            const newBubbles = updatedData.map((b, i) => ({
+                index: i + 1,
+                title: b.title,
+                description: b.description,
+                visible: b.visible ?? false
+            }));
+
+            if (prevCount > 0 && prevCount <= newBubbles.length) {
+                newBubbles[prevCount - 1] = {
+                    ...newBubbles[prevCount - 1],
+                    visible: true
+                };
+            }
+
+            setBubbles(newBubbles);
+
+
             setTurnsLeft(prev => Math.max(prev - 1, 0));
         } catch (err) {
             console.error(err);
         }
+
         setInputValue('');
-    };
-
-    const handleRunSimulation = async () => {
-        const actionMessages = messages.filter(m => m.type === 'action');
-        if (actionMessages.length === 0) return;
-
-        const payloadMessages = messages.slice(0, -1);
-
-        try {
-            const result = await runSimulation({
-                location: setup.coords,
-                initialStability: setup.initialStability,
-                prevResources,
-                messages: payloadMessages
-            });
-            setAiLastResult(result);
-        } catch (err) {
-            console.error(err);
-        }
     };
 
     const togglePlay = () => setIsPlaying(prev => !prev);
@@ -246,13 +345,17 @@ export default function Game() {
                 <div className="chat-panel">
                     <div className="panel-header">Action Panel</div>
                     <div className="action-card">
-                        <h4>🚑 Ambulance Route Blocked</h4>
-                        {setup ? (
-                            <p>{setup.description || 'No scenario description available.'}</p>
+                        {selectedBubble ? (
+                            <>
+                                <h4>{selectedBubble.title}</h4>
+                                <p>{selectedBubble.description}</p>
+                            </>
                         ) : (
-                            <p>Loading scenario...</p>
+                            <>
+                                <h4>Please, chooose the issue on a map</h4>
+                                <p>Then, try to solve in the nest way</p>
+                            </>
                         )}
-                        <div className="progress">Progress: 0 / 1</div>
                     </div>
 
                     <div className="chat-history">
@@ -326,13 +429,53 @@ export default function Game() {
                         </ul>
                     </div>
                     <button
-                        onClick={handleRunSimulation}
                         className="ai-simulation-btn"
                         style={{background: groupBg}}
                         disabled={!hasUserAction}
+                        onClick={handleShowComparison}
                     >
                         Run AI Simulation
                     </button>
+                </div>
+            )}
+
+            {showComparison && (
+                <div className="comparison-modal-backdrop">
+                    <div className="comparison-modal">
+                        <header className="cmp-header">
+                            <h2>Human vs. AI Response Comparison</h2>
+                            <button className="cmp-close" onClick={() => setShowComparison(false)}>×</button>
+                        </header>
+
+                        <div className="cmp-section">
+                            <div className="cmp-title">Event: {userLastResult.title}</div>
+                            <div className="cmp-scores">
+                                <div>
+                                    <strong>Your Response</strong><br/>
+                                    <span className="score">{userLastResult.score}/10</span>
+                                </div>
+                                <div>
+                                    <strong>AI Response</strong><br/>
+                                    <span className="score">{aiLastResult.score}/10</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="cmp-body">
+                            <div className="cmp-col">
+                                <h4>Your Response</h4>
+                                <p className="cmp-text">{userLastResult.text}</p>
+                                <p className="cmp-result">Result: {userLastResult.resultText}</p>
+                                <p className="cmp-feedback">Feedback: {userLastResult.feedback}</p>
+                            </div>
+                            <div className="cmp-col">
+                                <h4>AI Response</h4>
+                                <p className="cmp-text">{aiLastResult.text}</p>
+                                <p className="cmp-result">Result: {aiLastResult.resultText}</p>
+                                <p className="cmp-feedback">Feedback: {aiLastResult.feedback}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
