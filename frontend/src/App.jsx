@@ -8,17 +8,15 @@ import Menu from "./Pages/Menu/Menu";
 import GuardResultsRoute from "./Functions/GuardRoute";
 
 export default function App() {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Menu/>}/>
-                <Route path="/game" element={<Game/>}/>
-                <Route path="/results" element={
-                    <GuardResultsRoute>
-                        <Results/>
-                    </GuardResultsRoute>
-                }/>
-            </Routes>
-        </BrowserRouter>
-    );
+  const [resources, setResources] = React.useState([]);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Menu onResources={setResources} />} />
+        <Route path="/game" element={<Game resources={resources} />} />
+        <Route path="/results" element={<GuardResultsRoute><Results /></GuardResultsRoute>} />
+      </Routes>
+    </BrowserRouter>
+  );
 }

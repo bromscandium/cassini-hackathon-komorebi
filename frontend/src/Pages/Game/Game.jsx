@@ -2,8 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './Game.scss';
-import ResourceData from '../../Data/ResourceData';
-import {fetchInitialBubbles, fetchUpdatedBubbles, submitGameAction} from './GameAPI';
+import {fetchInitialBubbles, submitGameAction} from './GameAPI';
 import alertIcon from '../../ui/alert.png';
 import {useNavigate} from "react-router-dom";
 import {useDisaster} from "../../Functions/DisasterContext";
@@ -77,7 +76,7 @@ export default function Game() {
             try {
                 const parsed = JSON.parse(saved);
                 const newSetup = {
-                    coords: parsed.coords || [4.35, 50.85],
+                    coords: parsed.coords || [-0.3763, 39.4699],
                     zoom: 10,
                     initialStability: 60,
                     ...parsed
@@ -93,11 +92,38 @@ export default function Game() {
                 console.error('Invalid setup data:', e);
             }
         } else {
-            const fallback = {coords: [4.35, 50.85], zoom: 10, initialStability: 60};
+            const fallback = {coords: [-0.3763, 39.4699], zoom: 10, initialStability: 60};
             setSetup(fallback);
             setCurrentTime(new Date());
         }
-        setResources(ResourceData);
+
+    }, []);
+
+    useEffect(() => {
+    const saved = window.localStorage.getItem("resources");
+    if (!saved) return;
+
+    try {
+        // rawResources is: [ { "Medical Resources": {...}, "Logistics & Support": {...} } ]
+        const rawResources = JSON.parse(saved);
+        // Turn that into [{category, items:[{name, available, total, icon},…]}, …]
+        const formatted = rawResources.flatMap(groupObj =>
+        Object.entries(groupObj).map(([category, itemsObj]) => ({
+            category,
+            items: Object.entries(itemsObj).map(([name, available]) => ({
+            name,
+            available,
+            total: available,
+            icon: ""          // or supply an icon if you have one
+            }))
+        }))
+        );
+
+        console.log("Transformed resources:", formatted);
+        setResources(formatted);
+    } catch (e) {
+        console.error("Failed to parse or transform resources:", e);
+    }
     }, []);
 
     useEffect(() => {
@@ -186,80 +212,89 @@ export default function Game() {
     }, [map, bubbles, setup?.coords]);
 
     useEffect(() => {
-        fetchInitialBubbles().then(data => {
-            setBubbles(data.map((b, i) => ({
-                index: i + 1,
-                title: b.title,
-                description: b.description,
-                visible: b.visible ?? false
-            })));
-        });
+    fetchInitialBubbles(localStorage.getItem('location'))
+    .then(data => {
+        const mpt = data.threats.most_potential_threat;
+
+        setBubbles([{
+        index: 1,
+        title: mpt.name,
+        description: mpt.threat_description,
+        visible: false,
+        }]);
+
+        localStorage.setItem('session_id', data.session_id);
+    })
+    .catch(console.error);
+
     }, []);
 
-    const handleSubmit = async () => {
-        if (!inputValue.trim()) return;
+const handleSubmit = async () => {
+  if (!inputValue.trim()) return;
 
-        try {
-            const result = await submitGameAction({
-                location: setup.coords,
-                prompt: inputValue,
-                initialStability: setup.initialStability,
-                resources,
-                messages
-            });
-            setCrisisStability(result.initialStability);
-            setResources(result.resources);
-            setUserLastResult(result.userResult);
-            setAiLastResult(result.aiResult);
-            setShowResult(true);
+  // grab the *string* you stored under "sessionId"
+  const session_id = localStorage.getItem('session_id');
+  if (!session_id) {
+    console.error("No sessionId in storage");
+    return;
+  }
 
-            setMessages(prev => [
-                ...prev,
-                {
-                    type: 'action',
-                    title: setup.description,
-                    action: inputValue,
-                    resultText: result.userResult.resultText,
-                    feedback: result.userResult.feedback,
-                    effectiveness: result.userResult.effectiveness,
-                    time: new Date()
-                },
-            ]);
+  try {
+    // Pass the sessionId string *first*, then the user’s prompt directly
+    const result = await submitGameAction(session_id, inputValue);
 
-            const prevCount = bubbles.length;
+    setCrisisStability(result.severity_score * 10);
+    const formatted = Object.entries(result.updated_resources).map(
+    ([category, itemsObj]) => ({
+        category,
+        items: Object.entries(itemsObj).map(
+        ([name, available]) => ({
+            name,
+            available,
+            total: available,   // or preserve an earlier total if you have it
+            icon: ""            // or carry over whatever icon lookup you use
+        })
+        )
+    })
+    );
 
-            const updatedData = await fetchUpdatedBubbles({
-                location: setup.coords,
-                prompt: inputValue,
-                resources: result.resources,
-                messages: [...messages, {type: 'action', action: inputValue}]
-            });
+    setResources(formatted);
+    // after you get `result` back:
+    setUserLastResult({
+    shortResponse:    result.analysis.short_response,
+    feedback:         result.analysis.feedback,
+    responseAnalysis: result.analysis.response_analysis,
+    // …pick whatever else you need…
+    });
 
+    setAiLastResult(result.analysis.alternative_solutions);
+    setAiLastResult(result.analysis.alternative_solutions);
+    setShowResult(true);
 
-            const newBubbles = updatedData.map((b, i) => ({
-                index: i + 1,
-                title: b.title,
-                description: b.description,
-                visible: b.visible ?? false
-            }));
+    console.log("User action submitted:", result.analysis.alternative_solutions);
+    console.log("AI action submitted:", result.analysis.alternative_solutions);
 
-            if (prevCount > 0 && prevCount <= newBubbles.length) {
-                newBubbles[prevCount - 1] = {
-                    ...newBubbles[prevCount - 1],
-                    visible: true
-                };
-            }
+    setMessages(prev => [
+      ...prev,
+      {
+        type: 'action',
+        title: setup.description,
+        action: inputValue,
+        resultText: result.analysis.short_response,
+        feedback: result.analysis.feedback,
+        effectiveness: result.analysis.response_analysis.overall_effectiveness,
+        time: new Date()
+      },
+    ]);
+    console.log("User action submitted:", result);
 
-            setBubbles(newBubbles);
+    setTurnsLeft(prev => Math.max(prev - 1, 0));
+  } catch (err) {
+    console.error("submitGameAction failed:", err);
+  }
 
-
-            setTurnsLeft(prev => Math.max(prev - 1, 0));
-        } catch (err) {
-            console.error(err);
-        }
-
-        setInputValue('');
-    };
+  setInputValue('');
+};
 
     const togglePlay = () => setIsPlaying(prev => !prev);
 
@@ -373,11 +408,13 @@ export default function Game() {
                                         </p>
                                         <div className="feedback">Feedback: {m.feedback}</div>
                                         <div className="effectiveness-container">
+                                              <span className="score-label">{m.effectiveness} / 10</span>
+
                                             <span className="label">Effectiveness:</span>
                                             <div className="effectiveness-bar">
                                                 <div
                                                     className="bar-fill"
-                                                    style={{width: `${m.effectiveness}%`, background: groupBg}}
+                                                    style={{width: `${m.effectiveness*10}%`, background: groupBg}}
                                                 />
                                             </div>
                                         </div>

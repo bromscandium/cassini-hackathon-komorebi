@@ -20,7 +20,7 @@ const ROLE_OPTIONS = [
     { value: 'Resource Manager', label: 'Resource Manager', desc: 'Track and allocate available resources' }
 ];
 
-export default function Menu() {
+export default function Menu({ onResources }) {
     const mapContainerRef = useRef(null);
     const [map, setMap] = useState(null);
     const markersRef = useRef([]);
@@ -154,12 +154,16 @@ export default function Menu() {
             description: scenario.description
         };
 
-        try {
-            //await sendGameSetup(gameData, file);
-            localStorage.setItem('disaster_game_setup', JSON.stringify(gameData));
-            window.location.href = '/game';
-        } catch (err) {
-            alert(`Failed to start simulation: ${err.message}`);
+    try {
+    const resources = await sendGameSetup(gameData, file);
+    // resources is now the array itself
+    onResources && onResources(resources);
+    localStorage.setItem("resources", JSON.stringify(resources));
+    localStorage.setItem("location", formData.country + ", " + formData.region);
+
+      window.location.href = "/game";
+    } catch (err) {
+      alert(err.message);
         }
     };
 
